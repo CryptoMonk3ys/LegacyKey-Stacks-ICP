@@ -26,7 +26,7 @@ export class ContractComponent implements OnInit {
   contract = new LegacyContract();
   amount = 0;
   errorMessage: string | null = null;
-
+  
   @ViewChild('stepper') stepper!: MatStepper;
   dialogRef?: MatDialogRef<LoaderDialog>;
 
@@ -57,34 +57,40 @@ export class ContractComponent implements OnInit {
     validator_inactivity_time: ['', Validators.required],
     validators: this._formBuilder.array([])
   });
-
-
-
+  
   ngOnInit(): void {
+    console.log("parte 1");
     this.getAccountUseCase.execute()
       .then(acc => {
-        if (acc.address) {
+        if (acc.address) {          
           this.wallterAddress = acc.address;
           this.getContractData(acc.address);
           this.onAddBeneficiary();
         }
       });
+    console.log("parte 2");
   }
+  
 
   getContractData(account: string): void {
+    console.log("parte 3");
     this.getDataLegacyUseCase.execute({
       walletChain: this.walletChain,
       walletAddress: account
     }).then(data => {
       console.log("data", data);
+      console.log("wallet", this.walletChain, account);
     }).catch(e => console.error(e));
+    console.log("parte 4");
   }
-
+  
   get beneficiaryArr(): FormArray {
+    console.log("parte 7");
     return this.beneficiariesFormGroup.get('beneficiaries') as FormArray;
   }
 
   onAddBeneficiary(): void {
+    console.log("parte 5");
     let fg = this._formBuilder.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
@@ -96,9 +102,11 @@ export class ContractComponent implements OnInit {
       sendInfo: false,
     });
     this.beneficiaryArr.push(fg);
+    console.log("parte 6");
   }
 
   get validatorArr(): FormArray {
+    console.log("parte 8");
     return this.validatorsFormGroup.get('validators') as FormArray;
   }
 
@@ -110,9 +118,10 @@ export class ContractComponent implements OnInit {
       walletAddress: ['', Validators.required]
     });
     this.validatorArr.push(fg);
-  }
-
+  } 
+  
   onValidatorsQtyChange(qty: string) {
+    
     //const diff = qty - this.contract.validators.length;
     const diff = parseInt(qty) - this.validatorArr.length;
     if (diff > 0) {
@@ -124,10 +133,10 @@ export class ContractComponent implements OnInit {
         this.validatorArr.removeAt(this.validatorArr.length - 1);
       }
     }
-  }
+  } 
 
   async savePress() { 
-    
+    console.log("savePress");
     if (this.wallterAddress == null) {
       return;
     }
@@ -184,6 +193,7 @@ export class ContractComponent implements OnInit {
   }
 
   showLoader() {
+    console.log("showLoader");
     this.dialogRef = this.dialog.open(LoaderDialog, {
       disableClose: true
     });

@@ -66,13 +66,14 @@ export class PaymentComponent implements OnInit {
   }
 
   async onPay() {
+    
     if (this.wallterAddress == null) {
       return;
     }
 
     //await this.pago();
     this.showLoader();
-
+    
     this.payServiceUseCase.execute({
       walletChain: this.walletChain,
       walletAddress: this.wallterAddress,
@@ -90,9 +91,9 @@ export class PaymentComponent implements OnInit {
 
   onSuccessPayment() {
     this.showPopup(
-      "Pago exitoso",
-      "¡Tu pago se ha generado con éxito! Ahora vamos a confirmar la información de tu herencia.",
-      "Continuar",
+      "Payment successful",
+      "Your payment has been successfully generated! Now let's confirm your inheritance information.",
+      "Continue",
       "success"
     );
   }

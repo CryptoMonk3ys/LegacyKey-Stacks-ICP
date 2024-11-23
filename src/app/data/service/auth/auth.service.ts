@@ -60,10 +60,9 @@ export class AuthService {
         }
         case "pado": {
           console.log("PADO auth");
-          const accounts = await this.padoWallet.connect();
-          console.log("cuenta1 ",accounts);
+          const accounts = await this.padoWallet.connect();          
           this.setAccountAddress(accounts[0]);
-          console.log("cuenta ",accounts);
+          console.log("cuenta: ",accounts);
           resolve(accounts);
           break;
         }

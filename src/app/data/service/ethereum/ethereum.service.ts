@@ -8,6 +8,8 @@ import { EthereumRepository } from "../../../domain/repository/ethereum.resposit
 
 const ABI1 = require("./abi/sc-legacy.json");
 const ABI2 = require("./abi/usdt.json");
+const SCLegacyKey = environment.SEPOLIA_LEGACY_KEY;
+const SCusdt= environment.SEPOLIA_USDT;
 
 declare let window: any;
 
@@ -19,6 +21,7 @@ export class EthereumService extends EthereumRepository {
   ) {
     super();
   }
+  
 
   getBalance(account: string): Promise<Balance[]> {
     return new Promise<Balance[]>((resolve, reject) => {
@@ -39,12 +42,12 @@ export class EthereumService extends EthereumRepository {
 
   isPaidLegacyKeySC(address: string): Promise<boolean> {
     return new Promise<boolean>(async (resolve, reject) => {
-      const SCLegacyKey = environment.SEPOLIA_LEGACY_KEY;
+      
       window.web3 = new Web3(window.ethereum);
       window.contract1 = await new window.web3.eth.Contract(ABI1, SCLegacyKey);
       try {
         const value = (await window.contract1.methods.pay(address).call()).pay;        
-        console.log("Verificacion de pago terminada");
+        console.log("Verificacion de pago terminada: ",value);
         resolve(value);
       } catch (e) {
         reject(e);
@@ -54,17 +57,33 @@ export class EthereumService extends EthereumRepository {
 
   isProofOfHumanity(address: string): Promise<boolean> {
     return new Promise<boolean>(async (resolve, reject) => {
-      const SCLegacyKey = environment.SEPOLIA_LEGACY_KEY;
+      
       window.web3 = new Web3(window.ethereum);
       window.contract1 = await new window.web3.eth.Contract(ABI1, SCLegacyKey);
       try {        
-        const value = (await window.contract1.methods.pay(address).call()).POH;
-        console.log("value: ",value);
+        const value = (await window.contract1.methods.pay(address).call()).POH;        
         console.log("Verificacion de Humanidad terminada");
         resolve(value);
       } catch (e) {
         reject(e);
       }      
+    });
+  }
+
+  proofOfHumanity(address: string): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {      
+      window.web3 = new Web3(window.ethereum);      
+      window.contract1 = await new window.web3.eth.Contract(ABI1, SCLegacyKey);
+      console.log(address);
+      try {
+        console.log(await window.contract1.methods.proofOFHumanity());
+        await window.contract1.methods.proofOFHumanity().send({ from: address });
+        console.log("Proof terminado");
+
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 
@@ -80,47 +99,36 @@ export class EthereumService extends EthereumRepository {
 
   payLegacyKeySC(address: string): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
-      const SCLegacyKey = environment.SEPOLIA_LEGACY_KEY;
-      window.web3 = new Web3(window.ethereum);
+
+      const pay= await this.isPaidLegacyKeySC(address);
+      console.log("Verificacion de pago terminada 2: ",pay);
+      if(!pay){
+        window.web3 = new Web3(window.ethereum);      
+        window.contract1 = await new window.web3.eth.Contract(ABI1, SCLegacyKey);
+        window.contract2 = await new window.web3.eth.Contract(ABI2, SCusdt);
+
+        try {
+          const amount = await window.contract1.methods.amountPay().call();        
+          await window.contract2.methods.approve(SCLegacyKey, BigInt(amount).toString()).send({ from: address});
+          console.log("Approve terminado");
+          await window.contract1.methods.payLegacy().send({ from: address });
+          console.log("Pago terminado");
+
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      }else{
+        console.log("Ya pago");
+        resolve();
+      }     
       
-      window.contract1 = await new window.web3.eth.Contract(ABI1, SCLegacyKey);
-      window.contract2 = await new window.web3.eth.Contract(ABI2, environment.SEPOLIA_USDT);
-
-      try {
-        const amount = await window.contract1.methods.amountPay().call();
-        await window.contract2.methods.approve(SCLegacyKey, BigInt(amount).toString()).send({ from: address });
-        console.log("Approve terminado");
-        await window.contract1.methods.payLegacy().send({ from: address });
-        console.log("Pago terminado");
-
-        resolve();
-      } catch (e) {
-        reject(e);
-      }
     });
-  }
-
-  proofOfHumanity(address: string): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
-      const SCLegacyKey = environment.SEPOLIA_LEGACY_KEY;
-      window.web3 = new Web3(window.ethereum);      
-      window.contract1 = await new window.web3.eth.Contract(ABI1, SCLegacyKey);
-
-      try {        
-        await window.contract1.methods.proofOFHumanity().send({ from: address });
-        console.log("Pago terminado");
-
-        resolve();
-      } catch (e) {
-        reject(e);
-      }
-    });
-  }
+  }  
 
   newMemberLegacyKeySC(address: string, amount: number, validators: any[], beneficiaries: any[]): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
-        const SCLegacyKey = environment.SEPOLIA_LEGACY_KEY;
 
         if (isDevMode()) {
           console.log(address, amount);
@@ -130,12 +138,12 @@ export class EthereumService extends EthereumRepository {
 
         window.web3 = new Web3(window.ethereum);
         window.contract1 = await new window.web3.eth.Contract(ABI1, SCLegacyKey);
-        window.contract2 = await new window.web3.eth.Contract(ABI2, environment.SEPOLIA_USDT);
+        window.contract2 = await new window.web3.eth.Contract(ABI2, SCusdt);
         const amountf = BigInt(amount) * BigInt(10) ** BigInt(await window.contract2.methods.decimals().call());
-        await window.contract2.methods.approve(SCLegacyKey, amountf).send({ from: address });
+        await window.contract2.methods.approve(SCLegacyKey, amountf).send({ from: address});
         console.log("Approve terminado");
 
-        await window.contract1.methods.newMember(beneficiaries, validators, amount, 12).send({ from: address });
+        await window.contract1.methods.newMember(beneficiaries, validators, amount, 12).send({ from: address});
 
         resolve();
       } catch (e) {
@@ -147,8 +155,6 @@ export class EthereumService extends EthereumRepository {
   voteValidador(address: string, idLegacy: string): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
-        const SCLegacyKey = environment.SEPOLIA_LEGACY_KEY;
-
         window.web3 = await new Web3(window.ethereum);
         window.contract1 = await new window.web3.eth.Contract(ABI1, SCLegacyKey);
         //const idLegacy = this.id.idVote;
@@ -164,14 +170,12 @@ export class EthereumService extends EthereumRepository {
   withdrawHeir(address: string, idLegacy: string): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       try {
-        const SCLegacyKey = environment.SEPOLIA_LEGACY_KEY;
-
         window.web3 = await new Web3(window.ethereum);
         window.contract1 = await new window.web3.eth.Contract(ABI1, SCLegacyKey);
 
         //const idLegacy = this.heir.idWithdraw;
         //console.log(idLegacy);
-        await window.contract1.methods.withdrawHeir(idLegacy).send({ from: address });
+        await window.contract1.methods.withdrawHeir(idLegacy).send({ from: address});
 
         resolve();
       } catch (e) {

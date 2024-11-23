@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from "@angular/router";
 import { LoginWeb3UseCase } from '../../../domain/usecase/login-web3.use-case';
 import { IsPaidLegacyUseCase } from '../../../domain/usecase/is-paid-legacy.use-case';
+//import {isPaidLegacyKeySC} from '../../../data/service/ethereum/ethereum.service';
 import { Blockchain } from '../../../domain/type/blockchain.type';
 import MPCTLSJSSDK from "@padolabs/mpctls-js-sdk";
 declare let window: any;
@@ -107,7 +108,7 @@ export class LoginComponent implements OnInit {
         }
       });
     
-  }
+  }  
 
   goToNext(walletChain: Blockchain, account: string) {
     console.log(walletChain, account);
@@ -115,7 +116,9 @@ export class LoginComponent implements OnInit {
       walletChain,
       walletAddress: account
     }).then(isPaid => {
+      console.log(isPaid);
       if (isPaid) {
+        console.log("isPaid");
         this.router.navigate(['contract'])
       } else {
         this.router.navigate(['payment'])

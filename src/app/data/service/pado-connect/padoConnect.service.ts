@@ -42,8 +42,9 @@ export class padoService extends WalletRepository {
     return new Promise<string[]>(async (resolve, reject) => {
       const accounts: string[] = await window.ethereum.request({ method: 'eth_requestAccounts' });
       console.log("accounts: ", accounts);
-      const ethereumService = new EthereumService();
+      const ethereumService = new EthereumService(); 
       const isPOH= await ethereumService.isProofOfHumanity(accounts[0]);
+      console.log("isPOH: ", isPOH);
       if(!isPOH){
 
         try {
@@ -76,8 +77,9 @@ export class padoService extends WalletRepository {
         } catch (err) {
           reject(err);
         }
-      }
-      await ethereumService.proofOfHumanity(accounts[0]);
+        await ethereumService.proofOfHumanity(accounts[0]);
+      } 
+      
       resolve(accounts);
     });
   }
